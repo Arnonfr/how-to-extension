@@ -17,6 +17,12 @@ Google; the recipe shows up in the app on your phone.
 Saving a page you already saved is free: the extension checks your cookbook first and
 skips the import.
 
+After a save, a slim toast appears on the page itself for ~1.5 seconds (hovering keeps
+it): “Saved to HowTo” with a tag button that opens a small tag editor for the recipe
+(tags are stored on the recipe object in your cookbook), while clicking the toast body
+opens the recipe in the HowTo web app. The app never opens by itself - everything runs
+in the background.
+
 ## Install (no Chrome Web Store)
 
 1. Download and unzip this repo (Code → Download ZIP).

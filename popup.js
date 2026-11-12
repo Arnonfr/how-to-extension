@@ -18,10 +18,10 @@ function render(email) {
   authButton.textContent = signedIn ? 'Sign out' : 'Sign in with Google';
 }
 
-async function activeTabUrl() {
+async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  const url = tab?.url ?? '';
-  return /^https?:\/\//.test(url) ? url : null;
+  if (!tab || !/^https?:\/\//.test(tab.url ?? '')) return null;
+  return tab;
 }
 
 async function refresh() {
@@ -46,13 +46,13 @@ saveButton.addEventListener('click', async () => {
   saveButton.disabled = true;
   setStatus('');
   try {
-    const url = await activeTabUrl();
-    if (!url) {
+    const tab = await activeTab();
+    if (!tab) {
       setStatus('This page cannot be saved. Open a recipe page or a YouTube video.', 'error');
       return;
     }
-    setStatus('Saving. Imports can take up to a minute...');
-    const result = await send({ type: 'save', url });
+    setStatus('Saving in the background - a banner confirms on the page.');
+    const result = await send({ type: 'save', url: tab.url, tabId: tab.id });
     if (result?.error === 'auth') {
       render(null);
       setStatus('Sign in with Google first.', 'error');

@@ -131,6 +131,42 @@ async function save(url) {
   return { saved: recipe };
 }
 
+// Replace the stored recipe (used by tag edits). Upsert without
+// ignoreDuplicates so the row actually updates; fall back to delete+insert
+// if the project's RLS has no update policy.
+async function updateRecipe(userId, recipe) {
+  const { error } = await sb.from('saved_recipes').upsert(
+    { user_id: userId, recipe_id: recipe.id, recipe },
+    { onConflict: 'user_id,recipe_id' },
+  );
+  if (!error) return;
+  const { error: deleteError } = await sb.from('saved_recipes').delete()
+    .eq('user_id', userId).eq('recipe_id', recipe.id);
+  if (deleteError) throw new Error('Could not save the tags. Try again.');
+  await upsertRecipe(userId, recipe);
+}
+
+async function setTags(recipeId, tags) {
+  const session = await getSession();
+  if (!session?.user) return { error: 'auth' };
+  const { data, error } = await sb.from('saved_recipes')
+    .select('recipe').eq('user_id', session.user.id).eq('recipe_id', recipeId).maybeSingle();
+  if (error || !data?.recipe) throw new Error('Could not load the recipe. Try again.');
+  await updateRecipe(session.user.id, { ...data.recipe, tags });
+  return { tags };
+}
+
+// The save finishes in the background; the page toast is the confirmation.
+async function showToast(tabId, recipe, duplicate) {
+  try {
+    await chrome.scripting.executeScript({ target: { tabId }, files: ['content.js'] });
+    await chrome.tabs.sendMessage(tabId, { type: 'howto:toast', recipe, duplicate });
+  } catch {
+    // Some pages (chrome://, the Web Store) cannot be injected; the popup
+    // status still reports the result when it is open.
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const respond = (promise) => {
     promise.then(sendResponse).catch((cause) => {
@@ -146,7 +182,15 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     case 'signOut':
       return respond(sb.auth.signOut({ scope: 'local' }).then(() => ({ email: null })));
     case 'save':
-      return respond(save(message.url));
+      return respond((async () => {
+        const result = await save(message.url);
+        if (!result.error && message.tabId) {
+          await showToast(message.tabId, result.saved, !!result.duplicate);
+        }
+        return result;
+      })());
+    case 'setTags':
+      return respond(setTags(message.recipeId, Array.isArray(message.tags) ? message.tags : []));
     default:
       return undefined;
   }
