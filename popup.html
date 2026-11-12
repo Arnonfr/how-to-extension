@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  /* Design tokens mirror src/theme.ts in the HowTo app repos: warm dark look,
+     amber accent, serif headings (Fraunces on the web; system serif here). */
+  :root {
+    --bg: #14110F;
+    --surface: #1F1B18;
+    --surface-raised: #2A2420;
+    --text: #F5EFE8;
+    --text-dim: #B8ACA0;
+    --accent: #E8A33D;
+    --outline: #3D352E;
+    --danger: #E0655A;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    width: 280px;
+    padding: 20px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, sans-serif;
+    font-size: 13px;
+  }
+  h1 {
+    font-family: serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+  }
+  .subtitle { color: var(--text-dim); margin-top: 4px; }
+  button {
+    width: 100%;
+    margin-top: 16px;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 10px;
+    background: var(--accent);
+    color: #1a130a;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.6; cursor: default; }
+  button.secondary {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--outline);
+    margin-top: 8px;
+    font-weight: 500;
+  }
+  .account {
+    margin-top: 16px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    color: var(--text-dim);
+    overflow-wrap: anywhere;
+  }
+  .status { margin-top: 12px; min-height: 16px; color: var(--text-dim); }
+  .status.error { color: var(--danger); }
+  .status.done { color: var(--accent); }
+</style>
+</head>
+<body>
+  <h1>HowTo</h1>
+  <p class="subtitle">Save recipes from any page to your cookbook.</p>
+  <div id="account" class="account" hidden></div>
+  <button id="save" hidden>Save this recipe</button>
+  <button id="auth">Sign in with Google</button>
+  <p id="status" class="status"></p>
+  <script src="popup.js"></script>
+</body>
+</html>

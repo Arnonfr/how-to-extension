@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "HowTo Recipe Saver",
+  "version": "0.1.0",
+  "description": "Save recipes from any page or YouTube video to your HowTo cookbook.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA7crEq4+afKaZk+SwUbrHzCcndG5tZ8YgiuP7glVHcSeJ4C5ECuC3BPf6/+3bFw2K//zc2cvEmnuSCiji0AFvxPA5Q1H3l1M4ELR9ZD5VJKSdNUFS8sU8qmg6gqvsAiR/dTxH2WV5DekssvKAD/oHtbu5GO0fgLRWM4z6HRVTn46zoFN7DpQVjaH7sqErx+/LXs6JE9A1ka6o24JeQrGpFkaZjRPDl/pntqmFgR8znDC8WJrPmmTGzTh1iwR2/Z/2hKsTxdyX3jRYQ9nLPmZnQmZABvjilLjw57+K9l6YqvvEgbhq2iXP2RJh7KXEg7/o8FTcA4vT+T1qJ+ZGLjxlzQIDAQAB",
+  "permissions": ["identity", "storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://howto-liart.vercel.app/*",
+    "https://kbnqajuwnhzwtnybqixn.supabase.co/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Save to HowTo"
+  }
+}
