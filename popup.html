@@ -1,77 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
-<style>
-  /* Design tokens mirror src/theme.ts in the HowTo app repos: warm dark look,
-     amber accent, serif headings (Fraunces on the web; system serif here). */
-  :root {
-    --bg: #14110F;
-    --surface: #1F1B18;
-    --surface-raised: #2A2420;
-    --text: #F5EFE8;
-    --text-dim: #B8ACA0;
-    --accent: #E8A33D;
-    --outline: #3D352E;
-    --danger: #E0655A;
-  }
-  * { box-sizing: border-box; margin: 0; }
-  body {
-    width: 280px;
-    padding: 20px;
-    background: var(--bg);
-    color: var(--text);
-    font-family: system-ui, sans-serif;
-    font-size: 13px;
-  }
-  h1 {
-    font-family: serif;
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-  }
-  .subtitle { color: var(--text-dim); margin-top: 4px; }
-  button {
-    width: 100%;
-    margin-top: 16px;
-    padding: 10px 12px;
-    border: none;
-    border-radius: 10px;
-    background: var(--accent);
-    color: #1a130a;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  button:disabled { opacity: 0.6; cursor: default; }
-  button.secondary {
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--outline);
-    margin-top: 8px;
-    font-weight: 500;
-  }
-  .account {
-    margin-top: 16px;
-    padding: 10px 12px;
-    background: var(--surface);
-    border: 1px solid var(--outline);
-    border-radius: 10px;
-    color: var(--text-dim);
-    overflow-wrap: anywhere;
-  }
-  .status { margin-top: 12px; min-height: 16px; color: var(--text-dim); }
-  .status.error { color: var(--danger); }
-  .status.done { color: var(--accent); }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cookit</title>
+<link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <h1>HowTo</h1>
-  <p class="subtitle">Save recipes from any page to your cookbook.</p>
-  <div id="account" class="account" hidden></div>
-  <button id="save" hidden>Save this recipe</button>
-  <button id="auth">Sign in with Google</button>
-  <p id="status" class="status"></p>
+  <header class="masthead">
+    <h1 dir="ltr">Cookit</h1>
+    <span class="brand-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v18H6.5A2.5 2.5 0 0 1 4 18.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H20M9 7h6M12 4v6"/></svg></span>
+  </header>
+  <main>
+    <h2 id="heading">Your recipes, together.</h2>
+    <p id="intro" class="meta">Save a recipe to your collection.</p>
+    <section class="recipe-card" aria-label="Current page">
+      <span class="page-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg></span>
+      <div class="recipe-copy"><p id="page-title" class="recipe-title" dir="auto">Loading current page...</p><p id="page-source" class="meta source" dir="ltr"></p></div>
+    </section>
+    <button id="save" class="primary" disabled><span id="action-label">Save to my recipes</span><svg id="action-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button id="book" class="book">Open my recipe book</button>
+    <p id="status" class="status meta" role="status" aria-live="polite"></p>
+  </main>
+  <footer>
+    <div id="account" class="account" hidden><span class="account-dot" aria-hidden="true"></span><span id="account-email" dir="ltr"></span></div>
+    <button id="auth" class="auth" disabled>Sign in with Google</button>
+  </footer>
   <script src="popup.js"></script>
 </body>
 </html>
