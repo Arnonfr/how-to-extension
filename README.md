@@ -2,7 +2,7 @@
 
 Chrome extension for the same personal recipe collection as the Cookit app.
 
-## Version 0.4.1
+## Version 0.4.2
 
 - Current app recipe-reader design: forest-green canvas, green rounded recipe cards, warm cream text and gold accent and bundled Google Sans with Hebrew glyphs. Based on `src/theme.ts`, `src/AppText.tsx` and `app/index.tsx` in the app, rather than the home screen palette.
 - A standing Open my recipe book button is available independently of sign-in/save state.
@@ -16,7 +16,7 @@ Chrome extension for the same personal recipe collection as the Cookit app.
 
 ## Install or update
 
-1. Unzip `Cookit-extension-0.4.1.zip` into a permanent folder.
+1. Unzip `Cookit-extension-0.4.2.zip` into a permanent folder.
 2. Open `chrome://extensions` and turn on **Developer mode**.
 3. Choose **Load unpacked** and select the folder containing `manifest.json`.
 4. If updating the same installed folder, replace its files and press the extension's **Reload** button instead. The fixed extension key is unchanged, so the extension ID and OAuth redirect stay the same: `pggeiekplhcfafblgjjpaebehelmoand`.
