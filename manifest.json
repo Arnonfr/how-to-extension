@@ -20,16 +20,5 @@
   "action": {
     "default_popup": "popup.html",
     "default_title": "Cookit"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "fonts/*.woff2"
-      ],
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ]
-    }
-  ]
+  }
 }
