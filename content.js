@@ -1,19 +1,23 @@
 // HowTo Recipe Saver - content script: the post-save toast and tag editor.
 // Injected on demand by the background worker after a save completes.
-// Design tokens mirror src/theme.ts in the app repos: warm dark, amber accent.
+// Light design tokens and bundled Google Sans match the current app home.
 (() => {
   if (window.__howtoToastLoaded) return;
   window.__howtoToastLoaded = true;
 
+  const fontStyle = document.createElement('style');
+  fontStyle.textContent = `@font-face { font-family: 'Cookit Sans'; src: url('${chrome.runtime.getURL('fonts/GoogleSans-Regular.woff2')}') format('woff2'); font-weight: 400; }`;
+  document.documentElement.appendChild(fontStyle);
+
   const COLORS = {
-    bg: '#14110F',
-    surface: '#1F1B18',
-    raised: '#2A2420',
-    text: '#F5EFE8',
-    dim: '#B8ACA0',
-    accent: '#E8A33D',
-    outline: '#3D352E',
-    danger: '#E0655A',
+    bg: '#162D25',
+    surface: '#29473A',
+    raised: '#29473A',
+    text: '#FFF8E9',
+    dim: '#E6E2D2',
+    accent: '#EAC883',
+    outline: '#6D8074',
+    danger: '#FFB4A8',
   };
   const WEB_RECIPE_URL = (id) => `https://howto-liart.vercel.app/?v=${encodeURIComponent(id)}`;
 
@@ -25,12 +29,12 @@
 
   function baseStyles(el) {
     el.style.cssText = `
-      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
       width: 30%; min-width: 260px; max-width: 460px;
       background: ${COLORS.bg}; color: ${COLORS.text};
-      border: 1px solid ${COLORS.outline}; border-radius: 10px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.45);
-      font-family: system-ui, sans-serif; font-size: 13px;
+      border: 1px solid ${COLORS.outline}; border-radius: 19px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+      font-family: 'Cookit Sans', sans-serif; font-size: 13px;
       z-index: 2147483647; direction: ltr; text-align: left;
     `;
   }
@@ -57,8 +61,8 @@
     `;
 
     const label = document.createElement('span');
-    label.style.cssText = `flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Georgia, serif;`;
-    label.textContent = duplicate ? 'Already in your cookbook' : 'Saved to HowTo';
+    label.style.cssText = `flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'Cookit Sans', sans-serif;`;
+    label.textContent = duplicate ? 'Already in your cookbook' : 'Saved to Cookit';
 
     const tagButton = document.createElement('button');
     tagButton.title = 'Manage tags';
@@ -122,15 +126,16 @@
 
     panel = document.createElement('div');
     baseStyles(panel);
-    panel.style.cssText += 'padding: 14px; top: 58px;';
+    panel.style.cssText += 'padding: 14px; bottom: 64px;';
 
     const title = document.createElement('div');
-    title.style.cssText = `font-family: Georgia, serif; font-size: 15px; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
+    title.style.cssText = `font-family: 'Cookit Sans', sans-serif; font-size: 15px; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
     title.textContent = 'Tags';
 
     const subtitle = document.createElement('div');
     subtitle.style.cssText = `color: ${COLORS.dim}; font-size: 12px; margin-bottom: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;`;
     subtitle.textContent = recipe.title;
+    subtitle.dir = 'auto';
 
     const chipRow = document.createElement('div');
     chipRow.style.cssText = 'display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 24px; align-items: center;';
@@ -176,14 +181,14 @@
     input.maxLength = 40;
     input.style.cssText = `
       flex: 1; background: ${COLORS.surface}; color: ${COLORS.text};
-      border: 1px solid ${COLORS.outline}; border-radius: 8px;
-      padding: 7px 10px; font-size: 13px; outline: none;
+      border: none; border-bottom: 1px solid ${COLORS.outline}; border-radius: 0;
+      padding: 7px 0; font-size: 13px; outline: none;
     `;
     const add = document.createElement('button');
     add.type = 'submit';
     add.textContent = 'Add';
     add.style.cssText = `
-      background: ${COLORS.accent}; color: #1a130a; border: none;
+      background: ${COLORS.accent}; color: #162D25; border: none;
       border-radius: 8px; padding: 7px 14px; font-size: 13px;
       font-weight: 600; cursor: pointer;
     `;
