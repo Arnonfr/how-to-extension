@@ -11,7 +11,7 @@ Chrome extension for the same personal recipe collection as the Cookit app.
 - English and Hebrew interface based on Chrome's UI language; Hebrew layout is RTL and recipe titles use their own text direction. The two main action labels stay in English as requested.
 - Preserves the v0.3 fallback that imports text from the open recipe tab when a site blocks server-side reading. It checks that the tab still has the requested URL before reading it.
 - Saves stay in the background when the popup closes. Concurrent requests for the same page in the active worker share one save operation.
-- The bottom confirmation banner uses the same light design; its existing tag editor is retained.
+- The bottom confirmation banner uses the same green design; its existing tag editor is retained.
 - Open recipe checks the selected recipe belongs to the signed-in account, copies that recipe alone to the web reader's existing local cache, then opens the reader. It does not put OAuth tokens in URLs, create a public share link, or depend on a second web sign-in.
 
 ## Install or update
@@ -28,9 +28,9 @@ No build step, Chrome Web Store publication or payment is required.
 
 Uses the existing import endpoint on `https://howto-liart.vercel.app` and the existing Supabase `saved_recipes` table. The Gemini key stays on the server. Existing free-tier quota limits apply, with no paid fallback. It reads page metadata only when the popup is opened; recipe extraction starts on Save.
 
-Runtime permissions remain `identity`, `storage`, `activeTab`, `scripting`, and the two existing backend hosts. The only new web-accessible resources are the two bundled font files, for the confirmation banner. No analytics or remote scripts are added.
+Runtime permissions remain `identity`, `storage`, `activeTab`, `scripting`, and the two existing backend hosts. Fonts are embedded locally in the stylesheet and confirmation script; no external font requests or web-accessible font resources are required. No analytics or remote scripts are added.
 
-Google Sans is subset to Latin and Hebrew and distributed under the SIL Open Font License in `fonts/GoogleSans-LICENSE.txt`. Expo package license is included separately.
+Google Sans is subset to Latin and Hebrew and distributed under the SIL Open Font License in the header of `popup.css`.
 
 ## Checks
 
