@@ -117,7 +117,7 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 button:disabled { opacity: .48; cursor: default; }
 .primary { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; min-height: 48px; padding: 12px 16px; border: 0; border-radius: 24px; background: var(--pink); margin-top: 16px; font-size: 16px; font-weight: 600; }
 .primary { color: #162D25; }
-.book { width: 100%; min-height: 44px; margin-top: 8px; border: 1px solid var(--line); border-radius: 24px; color: var(--ink); background: transparent; font-size: 14px; }
+.book { width: auto; max-width: 190px; padding: 8px 12px; min-height: 44px; margin-top: 0; border: 1px solid var(--line); border-radius: 24px; color: var(--ink); background: transparent; font-size: 14px; }
 .book:hover { background: var(--white); }
 .primary:not(:disabled):hover { filter: brightness(.96); }
 .primary:not(:disabled):active { transform: scale(.99); }
