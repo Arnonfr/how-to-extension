@@ -2,10 +2,10 @@
 
 Chrome extension for the same personal recipe collection as the Cookit app.
 
-## Version 0.4.3
+## Version 0.4.4
 
 - Current app recipe-reader design: forest-green canvas, green rounded recipe cards, warm cream text and gold accent and bundled Google Sans with Hebrew glyphs. Based on `src/theme.ts`, `src/AppText.tsx` and `app/index.tsx` in the app, rather than the home screen palette.
-- A standing Open my recipe book text button in the top header is available independently of sign-in/save state.
+- A standing My recipes text button in the top header is available independently of sign-in/save state.
 - One main action: **Save to my recipes** becomes **Open recipe** after a successful save. A duplicate or a saved recipe detected when reopening the popup also shows Open recipe.
 - Google sign-in and a small sign-out control. Uses the existing Supabase account and session refresh.
 - English and Hebrew interface based on Chrome's UI language; Hebrew layout is RTL and recipe titles use their own text direction. The two main action labels stay in English as requested.
@@ -16,7 +16,7 @@ Chrome extension for the same personal recipe collection as the Cookit app.
 
 ## Install or update
 
-1. Unzip `Cookit-extension-0.4.3.zip` into a permanent folder.
+1. Unzip `Cookit-extension-0.4.4.zip` into a permanent folder.
 2. Open `chrome://extensions` and turn on **Developer mode**.
 3. Choose **Load unpacked** and select the folder containing `manifest.json`.
 4. If updating the same installed folder, replace its files and press the extension's **Reload** button instead. The fixed extension key is unchanged, so the extension ID and OAuth redirect stay the same: `pggeiekplhcfafblgjjpaebehelmoand`.
