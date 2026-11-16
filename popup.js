@@ -19,9 +19,7 @@ const copy = hebrew ? {
 };
 document.documentElement.lang = hebrew ? 'he' : 'en';
 document.documentElement.dir = hebrew ? 'rtl' : 'ltr';
-$('heading').textContent = copy.heading;
-$('intro').textContent = copy.intro;
-$('book').textContent = hebrew ? 'פתיחת ספר המתכונים שלי' : 'Open my recipe book';
+$('book').textContent = hebrew ? 'המתכונים שלי' : 'My recipes';
 $('page-title').textContent = copy.loading;
 
 const icons = {
