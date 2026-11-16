@@ -69,8 +69,8 @@ async function signIn() {
 }
 
 // The same import call the native app makes: the server holds the Gemini key
-// and enforces the free-tier cap (one import per 10 minutes site-wide).
-async function importRecipe(url, videoId) {
+// and enforces its current free-tier quota. No paid fallback is used.
+async function importRecipe(url, videoId, pageText) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 75000);
   let response;
@@ -79,7 +79,9 @@ async function importRecipe(url, videoId) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: controller.signal,
-      body: JSON.stringify(videoId
+      body: JSON.stringify(pageText
+        ? { mode: 'text', lang: 'original', text: pageText, sourceUrl: url }
+        : videoId
         ? { mode: 'video', lang: 'original', videoId }
         : { mode: 'url', lang: 'original', url }),
     });
@@ -90,7 +92,7 @@ async function importRecipe(url, videoId) {
   }
   const data = await response.json().catch(() => null);
   if (response.status === 429) {
-    throw new Error('The importer is resting (free tier: one import per 10 minutes). Try again soon.');
+    throw new Error('The import limit has been reached. Try again later.');
   }
   if (!response.ok) {
     throw new Error(typeof data?.error === 'string' ? data.error : 'Could not import this page. Try again.');
@@ -114,19 +116,86 @@ async function upsertRecipe(userId, recipe) {
 async function alreadySaved(userId, url, videoId) {
   const { data, error } = await sb.from('saved_recipes')
     .select('recipe').eq('user_id', userId);
-  if (error || !data) return null;
+  if (error) throw new Error('Could not check your recipes. Try again.');
+  if (!data) return null;
   const recipes = data.map((row) => row.recipe).filter(Boolean);
   if (videoId) return recipes.find((recipe) => recipe.videoId === videoId) ?? null;
   return recipes.find((recipe) => recipe.source?.url === url) ?? null;
 }
 
-async function save(url) {
+// Reads the open page's text in the user's own browser. Sites behind bot
+// protection (Cloudflare walls) answer the server's fetch with a challenge,
+// but the recipe is right here in the tab, so a text import still works.
+async function extractPageText(tabId, expectedUrl) {
+  if (!tabId) return '';
+  try {
+    const current = await chrome.tabs.get(tabId);
+    if (current.url !== expectedUrl) return '';
+    const [result] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: () => {
+        const root = document.querySelector('article, main, [itemtype*="Recipe"]') || document.body;
+        return (document.title + '\n\n' + (root?.innerText || '')).replace(/\n{3,}/g, '\n\n').trim().slice(0, 15000);
+      },
+    });
+    return typeof result?.result === 'string' ? result.result : '';
+  } catch {
+    return '';
+  }
+}
+
+// Server-side page reading failures the tab fallback can recover from.
+function isPageFetchError(message) {
+  return /could not be opened|No recipe text could be read|blocks automatic recipe reading|No recipe steps were found/i.test(message || '');
+}
+
+function validPageUrl(value) {
+  try { const url = new URL(value); return /^https?:$/.test(url.protocol) ? url : null; } catch { return null; }
+}
+
+const savesInFlight = new Map();
+
+async function stateForPage(url) {
+  const session = await getSession();
+  const email = session?.user?.email ?? null;
+  const parsed = validPageUrl(url);
+  if (!email || !parsed) return { email };
+  const key = `${session.user.id}:${parsed.href}`;
+  const pending = savesInFlight.get(key);
+  if (pending) {
+    try { const result = await pending; return { email, ...result }; }
+    catch (cause) { return { email, error: cause.message }; }
+  }
+  try { return { email, saved: await alreadySaved(session.user.id, parsed.href, youtubeId(parsed)) }; }
+  catch (cause) { return { email, error: cause.message }; }
+}
+
+async function saveOnce(url, tabId) {
+  const parsed = validPageUrl(url);
+  if (!parsed) throw new Error('Open a recipe page or a YouTube video to save.');
+  const session = await getSession();
+  if (!session?.user) return { error: 'auth' };
+  const key = `${session.user.id}:${parsed.href}`;
+  if (savesInFlight.has(key)) return savesInFlight.get(key);
+  const pending = save(parsed.href, tabId).finally(() => savesInFlight.delete(key));
+  savesInFlight.set(key, pending);
+  return pending;
+}
+
+async function save(url, tabId) {
   const session = await getSession();
   if (!session?.user) return { error: 'auth' };
   const videoId = youtubeId(new URL(url));
   const existing = await alreadySaved(session.user.id, url, videoId);
   if (existing) return { saved: existing, duplicate: true };
-  const recipe = await importRecipe(url, videoId);
+  let recipe;
+  try {
+    recipe = await importRecipe(url, videoId);
+  } catch (cause) {
+    const pageText = !videoId && isPageFetchError(cause?.message) ? await extractPageText(tabId, url) : '';
+    if (pageText.length < 500) throw cause;
+    recipe = await importRecipe(url, null, pageText);
+  }
   await upsertRecipe(session.user.id, recipe);
   return { saved: recipe };
 }
@@ -167,6 +236,41 @@ async function showToast(tabId, recipe, duplicate) {
   }
 }
 
+// Transfer only the selected recipe to the existing web reader's local cache.
+// Extension OAuth and web OAuth are separate: opening must not depend on a
+// second sign-in or put any authentication token in a URL.
+async function openRecipe(recipeId) {
+  const session = await getSession();
+  if (!session?.user) return { error: 'auth' };
+  if (typeof recipeId !== 'string' || !/^[\w-]{1,24}$/.test(recipeId)) {
+    throw new Error('This recipe cannot be opened. Save it again.');
+  }
+  const { data, error } = await sb.from('saved_recipes').select('recipe')
+    .eq('user_id', session.user.id).eq('recipe_id', recipeId).maybeSingle();
+  if (error || data?.recipe?.id !== recipeId) throw new Error('Could not find this recipe. Try saving it again.');
+  const tab = await chrome.tabs.create({ url: `${API_BASE}/import.html`, active: false });
+  try {
+    await new Promise((resolve, reject) => {
+      const cleanup = () => { clearTimeout(timer); chrome.tabs.onUpdated.removeListener(listener); };
+      const ready = () => { cleanup(); resolve(); };
+      const listener = (id, info) => { if (id === tab.id && info.status === 'complete') ready(); };
+      const timer = setTimeout(() => { cleanup(); reject(new Error('Could not open the recipe reader. Try again.')); }, 20000);
+      chrome.tabs.onUpdated.addListener(listener);
+      chrome.tabs.get(tab.id).then((current) => { if (current.status === 'complete') ready(); }).catch((cause) => { cleanup(); reject(cause); });
+    });
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (recipe) => localStorage.setItem(`howto.recipe.${recipe.id}`, JSON.stringify(recipe)),
+      args: [data.recipe],
+    });
+    await chrome.tabs.update(tab.id, { url: `${API_BASE}/?v=${encodeURIComponent(recipeId)}`, active: true });
+    return { opened: true };
+  } catch (cause) {
+    await chrome.tabs.remove(tab.id).catch(() => {});
+    throw cause;
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   const respond = (promise) => {
     promise.then(sendResponse).catch((cause) => {
@@ -176,19 +280,23 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   };
   switch (message?.type) {
     case 'getState':
-      return respond(getSession().then((session) => ({ email: session?.user?.email ?? null })));
+      return respond(stateForPage(message.url));
     case 'signIn':
       return respond(signIn().then((user) => ({ email: user.email ?? null })));
     case 'signOut':
       return respond(sb.auth.signOut({ scope: 'local' }).then(() => ({ email: null })));
     case 'save':
       return respond((async () => {
-        const result = await save(message.url);
+        const result = await saveOnce(message.url, message.tabId);
         if (!result.error && message.tabId) {
           await showToast(message.tabId, result.saved, !!result.duplicate);
         }
         return result;
       })());
+    case 'openBook':
+      return respond(chrome.tabs.create({ url: `${API_BASE}/import.html?view=book` }).then(() => ({ opened: true })));
+    case 'openRecipe':
+      return respond(openRecipe(message.recipeId));
     case 'setTags':
       return respond(setTags(message.recipeId, Array.isArray(message.tags) ? message.tags : []));
     default:
